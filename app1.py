@@ -9,12 +9,15 @@ from flask_socketio import SocketIO, emit
 
 app = Flask(__name__,static_url_path = "/",static_folder = "template",template_folder='template')
 app.config["TEMPLATES_AUTO_RELOAD"] = True
+socketio = SocketIO(app)
+msg=""
 
 @app.route('/')
 def index():    
     return render_template('./CarGame.html')
 
-def gen():    
+def gen(): 
+    global msg
     cap = cv2.VideoCapture(0)
          
     while(cap.isOpened()):
@@ -161,15 +164,13 @@ def gen():
 def video_feed():
     return Response(gen(),mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route("/api/info")
-def api_info():
-    info = {
-       "ip" : "127.0.0.1",
-       "hostname" : "everest",
-       "description" : "Main server",
-       "load" : [ 3.21, 7, 14 ]
-    }
-    return jsonify(info)
+@socketio.on('greet')
+def handle_my_custom_event():
+    print("Emited from client")
+    global msg
+    emit('myResponse', msg)
+
 
 if __name__ == '__main__':
-	app.run(debug=False)
+	socketio.run(app)
+    #app.run(debug=False)
